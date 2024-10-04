@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, TouchEvent } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useWindowSize } from '../hooks/useWindowSize'
 import NextImage from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -60,7 +60,7 @@ export function Page() {
   }, [selectedTemplate])
 
   // Updated rendering function
-  const renderMeme = (
+  const renderMeme = useCallback((
     ctx: CanvasRenderingContext2D, 
     img: HTMLImageElement, 
     textBoxes: TextBox[], 
@@ -107,7 +107,7 @@ export function Page() {
     if (includeHandles) {
       renderEditingHandles(ctx, textBoxes, size)
     }
-  }
+  }, []) // Empty dependency array as it doesn't depend on any state or props
 
   // Separate function for rendering handles
   const renderEditingHandles = (ctx: CanvasRenderingContext2D, textBoxes: TextBox[], size: number) => {
@@ -156,7 +156,7 @@ export function Page() {
         img.src = selectedTemplate.src
       }
     }
-  }, [selectedTemplate, textBoxes])
+  }, [selectedTemplate, textBoxes, renderMeme]) // Add renderMeme to the dependency array
 
   const handleTextChange = (id: number, text: string) => {
     setTextBoxes(textBoxes.map((box) => (box.id === id ? { ...box, text } : box)))
@@ -288,7 +288,7 @@ export function Page() {
   }
 
   // This could be in a useEffect or a render function
-  const renderEditableMeme = () => {
+  const renderEditableMeme = useCallback(() => {
     const canvas = canvasRef.current
     if (canvas && selectedTemplate) {
       const ctx = canvas.getContext('2d')
@@ -301,11 +301,11 @@ export function Page() {
         img.src = selectedTemplate.src
       }
     }
-  }
+  }, [selectedTemplate, textBoxes, renderMeme]) // Add renderMeme to the dependency array
 
   useEffect(() => {
     renderEditableMeme()
-  }, [selectedTemplate, textBoxes]) // Add other dependencies as needed
+  }, [selectedTemplate, textBoxes, renderEditableMeme]) // Add renderEditableMeme to the dependency array
 
   return (
     <div className="min-h-screen px-2 py-4 bg-retro-pattern text-white font-pixel flex flex-col">
