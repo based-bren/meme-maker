@@ -1,23 +1,25 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useRef, useEffect, TouchEvent } from 'react'
 import { useWindowSize } from '../hooks/useWindowSize'
+import NextImage from 'next/image'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface MemeTemplate {
-  id: number
-  src: string
-  alt: string
+// If you have type definitions, you might need to create them or import from the correct location
+type MemeTemplate = {
+  id: number;
+  src: string;
+  alt: string;
 }
 
-interface TextBox {
-  id: number
-  text: string
-  x: number
-  y: number
-  fontSize: number
-  color: string
+type TextBox = {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  rotation: number;
 }
 
 export function Page() {
@@ -27,6 +29,7 @@ export function Page() {
   const [selectedTemplate, setSelectedTemplate] = useState<MemeTemplate | null>(null)
   const [textBoxes, setTextBoxes] = useState<TextBox[]>([])
   const [draggedTextBox, setDraggedTextBox] = useState<number | null>(null)
+  const [isRotating, setIsRotating] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -50,27 +53,105 @@ export function Page() {
   useEffect(() => {
     if (selectedTemplate) {
       setTextBoxes([
-        { id: 1, text: 'Top text', x: 150, y: 30, fontSize: 20, color: '#ffffff' },
-        { id: 2, text: 'Bottom text', x: 150, y: 270, fontSize: 20, color: '#ffffff' },
+        { id: 1, text: 'Top text', x: 150, y: 30, fontSize: 20, color: '#ffffff', rotation: 0 },
+        { id: 2, text: 'Bottom text', x: 150, y: 270, fontSize: 20, color: '#ffffff', rotation: 0 },
       ])
     }
   }, [selectedTemplate])
+
+  // Updated rendering function
+  const renderMeme = (
+    ctx: CanvasRenderingContext2D, 
+    img: HTMLImageElement, 
+    textBoxes: TextBox[], 
+    includeHandles: boolean, 
+    size: number
+  ) => {
+    ctx.clearRect(0, 0, size, size)
+    ctx.drawImage(img, 0, 0, size, size)
+
+    textBoxes.forEach((textBox) => {
+      ctx.save()
+      ctx.translate(textBox.x, textBox.y)
+      ctx.rotate(textBox.rotation * Math.PI / 180)
+
+      ctx.font = `bold ${textBox.fontSize}px Impact`
+      ctx.fillStyle = textBox.color
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+
+      const text = textBox.text.toUpperCase()
+      
+      // Reduce letter spacing
+      const letterSpacing = textBox.fontSize * 0.02
+      const spacedText = text.split('').join(String.fromCharCode(8202).repeat(Math.round(letterSpacing)))
+
+      // Add drop shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 2
+      ctx.shadowOffsetY = 2
+
+      // Draw fill with drop shadow
+      ctx.fillText(spacedText, 0, 0)
+
+      // Reset shadow for future drawings
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+
+      ctx.restore()
+    })
+
+    if (includeHandles) {
+      renderEditingHandles(ctx, textBoxes, size)
+    }
+  }
+
+  // Separate function for rendering handles
+  const renderEditingHandles = (ctx: CanvasRenderingContext2D, textBoxes: TextBox[], size: number) => {
+    textBoxes.forEach((textBox) => {
+      // Scale handle size based on canvas size
+      const handleSize = size / 20
+
+      // Draw move icon (four-way arrow)
+      ctx.save()
+      ctx.translate(textBox.x, textBox.y)
+      ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(-handleSize/2, 0); ctx.lineTo(handleSize/2, 0)
+      ctx.moveTo(0, -handleSize/2); ctx.lineTo(0, handleSize/2)
+      ctx.moveTo(-handleSize/3, -handleSize/3); ctx.lineTo(-handleSize/2, -handleSize/2); ctx.lineTo(-handleSize/3*2, -handleSize/3)
+      ctx.moveTo(handleSize/3, -handleSize/3); ctx.lineTo(handleSize/2, -handleSize/2); ctx.lineTo(handleSize/3*2, -handleSize/3)
+      ctx.moveTo(-handleSize/3, handleSize/3); ctx.lineTo(-handleSize/2, handleSize/2); ctx.lineTo(-handleSize/3*2, handleSize/3)
+      ctx.moveTo(handleSize/3, handleSize/3); ctx.lineTo(handleSize/2, handleSize/2); ctx.lineTo(handleSize/3*2, handleSize/3)
+      ctx.stroke()
+      ctx.restore()
+
+      // Draw rotate icon (circular arrow)
+      ctx.save()
+      ctx.translate(textBox.x + handleSize*1.5, textBox.y - handleSize*1.5)
+      ctx.strokeStyle = 'rgba(0, 0, 255, 0.8)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(0, 0, handleSize/2, 0, 1.5 * Math.PI)
+      ctx.moveTo(handleSize/2, -handleSize/2); ctx.lineTo(handleSize/2, -handleSize/4); ctx.lineTo(handleSize/2*1.5, -handleSize/2)
+      ctx.stroke()
+      ctx.restore()
+    })
+  }
 
   useEffect(() => {
     if (selectedTemplate && canvasRef.current) {
       const canvas = canvasRef.current
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        const img = new window.Image()
+        const img = new Image()
         img.crossOrigin = "anonymous"
         img.onload = () => {
-          ctx.drawImage(img, 0, 0, 300, 300)
-          textBoxes.forEach((textBox) => {
-            ctx.font = `${textBox.fontSize}px 'Press Start 2P', cursive`
-            ctx.fillStyle = textBox.color
-            ctx.textAlign = 'center'
-            ctx.fillText(textBox.text, textBox.x, textBox.y)
-          })
+          renderMeme(ctx, img, textBoxes, true, 300)
         }
         img.src = selectedTemplate.src
       }
@@ -89,32 +170,112 @@ export function Page() {
     setTextBoxes(textBoxes.map((box) => (box.id === id ? { ...box, color } : box)))
   }
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, id: number) => {
-    setDraggedTextBox(id)
+  const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    console.log("handleStart called")
+    const canvas = canvasRef.current
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect()
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+
+      textBoxes.forEach((box) => {
+        // Check if the move icon is clicked (larger area around the text center)
+        const dx = x - box.x
+        const dy = y - box.y
+        if (dx * dx + dy * dy <= 225) { // 15^2 = 225, for a 30x30 pixel area
+          console.log("Move handle grabbed for box", box.id)
+          setDraggedTextBox(box.id)
+          setIsRotating(false)
+          return
+        }
+
+        // Check if the rotate icon is clicked
+        const rotateHandleX = box.x + 30
+        const rotateHandleY = box.y - 30
+        const drx = x - rotateHandleX
+        const dry = y - rotateHandleY
+        if (drx * drx + dry * dry <= 225) { // 15^2 = 225, for a 30x30 pixel area
+          console.log("Rotation handle grabbed for box", box.id)
+          setDraggedTextBox(box.id)
+          setIsRotating(true)
+          return
+        }
+      })
+    }
   }
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (draggedTextBox !== null) {
+      console.log("handleMove called for box", draggedTextBox)
       const canvas = canvasRef.current
       if (canvas) {
         const rect = canvas.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        setTextBoxes(textBoxes.map((box) => (box.id === draggedTextBox ? { ...box, x, y } : box)))
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+        const x = clientX - rect.left
+        const y = clientY - rect.top
+
+        setTextBoxes(prevTextBoxes => prevTextBoxes.map((box) => {
+          if (box.id === draggedTextBox) {
+            if (isRotating) {
+              const centerX = box.x
+              const centerY = box.y
+              const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI
+              console.log("Rotating box", box.id, "to angle", angle)
+              return { ...box, rotation: angle }
+            } else {
+              console.log("Moving box", box.id, "to", x, y)
+              return { ...box, x, y }
+            }
+          }
+          return box
+        }))
       }
     }
   }
 
-  const handleMouseUp = () => {
+  const handleEnd = () => {
+    console.log("handleEnd called")
     setDraggedTextBox(null)
+    setIsRotating(false)
   }
 
   const generateMeme = () => {
-    if (canvasRef.current) {
-      const link = document.createElement('a')
-      link.download = 'meme.png'
-      link.href = canvasRef.current.toDataURL()
-      link.click()
+    const canvas = canvasRef.current
+    if (canvas && selectedTemplate) {
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = 800
+      tempCanvas.height = 800
+      const tempCtx = tempCanvas.getContext('2d')
+      
+      if (tempCtx) {
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.onload = () => {
+          // Scale factor for positioning and sizing
+          const scaleFactor = 800 / 300
+          
+          // Scale the text boxes for the larger canvas
+          const scaledTextBoxes = textBoxes.map(box => ({
+            ...box,
+            x: box.x * scaleFactor,
+            y: box.y * scaleFactor,
+            fontSize: box.fontSize * scaleFactor
+          }))
+          
+          // Render the meme on the larger canvas
+          renderMeme(tempCtx, img, scaledTextBoxes, false, 800)
+          
+          const dataUrl = tempCanvas.toDataURL('image/png')
+          const link = document.createElement('a')
+          link.download = 'meme.png'
+          link.href = dataUrl
+          link.click()
+        }
+        img.src = selectedTemplate.src
+      }
     }
   }
 
@@ -125,6 +286,26 @@ export function Page() {
   const prevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1))
   }
+
+  // This could be in a useEffect or a render function
+  const renderEditableMeme = () => {
+    const canvas = canvasRef.current
+    if (canvas && selectedTemplate) {
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.onload = () => {
+          renderMeme(ctx, img, textBoxes, true, 300) // Pass textBoxes array
+        }
+        img.src = selectedTemplate.src
+      }
+    }
+  }
+
+  useEffect(() => {
+    renderEditableMeme()
+  }, [selectedTemplate, textBoxes]) // Add other dependencies as needed
 
   return (
     <div className="min-h-screen px-2 py-4 bg-retro-pattern text-white font-pixel flex flex-col">
@@ -197,9 +378,13 @@ export function Page() {
               ref={canvasRef}
               width={300}
               height={300}
-              onMouseDown={(e) => handleMouseDown(e, 1)}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
+              onMouseDown={handleStart}
+              onTouchStart={handleStart}
+              onMouseMove={handleMove}
+              onTouchMove={handleMove}
+              onMouseUp={handleEnd}
+              onMouseLeave={handleEnd}
+              onTouchEnd={handleEnd}
               className="border-4 border-white mb-4 cursor-move green-glow"
             />
             <div className="w-full">
@@ -253,7 +438,7 @@ export function Page() {
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setSelectedTemplate(template)}
                 >
-                  <Image
+                  <NextImage
                     src={template.src}
                     alt={template.alt}
                     width={windowSize.width >= 768 ? 600 : 300}
@@ -295,7 +480,6 @@ export function Page() {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1000 1000" fill="currentColor" className="w-6 h-6">
               <path d="M257.778 155.556H742.222V844.445H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333C410.742 373.333 337.446 441.677 329.586 528.889H328.889V844.445H257.778V155.556Z"/>
               <path d="M128.889 253.333L157.778 351.111H182.222V746.667C169.949 746.667 160 756.616 160 768.889V795.556H155.556C143.283 795.556 133.333 805.505 133.333 817.778V844.445H382.222V817.778C382.222 805.505 372.273 795.556 360 795.556H355.556V768.889C355.556 756.616 345.606 746.667 333.333 746.667H306.667V253.333H128.889Z"/>
-              <path d="M675.556 746.667C663.282 746.667 653.333 756.616 653.333 768.889V795.556H648.889C636.616 795.556 626.667 805.505 626.667 817.778V844.445H875.556V817.778C875.556 805.505 865.606 795.556 853.333 795.556H848.889V768.889C848.889 756.616 838.94 746.667 826.667 746.667V351.111H851.111L880 253.333H702.222V746.667H675.556Z"/>
             </svg>
           </a>
           <a href="https://opensea.io/collection/ham-pepes" target="_blank" rel="noopener noreferrer" className="text-white hover:text-green-300 transition-colors">
@@ -304,7 +488,7 @@ export function Page() {
             </svg>
           </a>
           <a href="https://www.hampepes.xyz/" target="_blank" rel="noopener noreferrer" className="text-white hover:text-green-300 transition-colors">
-            <Image
+            <NextImage
               src="/Based Pepe 1.png"
               alt="Ham Pepes"
               width={24}
