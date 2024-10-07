@@ -65,7 +65,8 @@ export function Page() {
     img: HTMLImageElement, 
     textBoxes: TextBox[], 
     includeHandles: boolean, 
-    size: number
+    size: number,
+    letterSpacingFactor: number = 0.01
   ) => {
     ctx.clearRect(0, 0, size, size)
     ctx.drawImage(img, 0, 0, size, size)
@@ -77,13 +78,15 @@ export function Page() {
 
       ctx.font = `bold ${textBox.fontSize}px Impact`
       ctx.fillStyle = textBox.color
+      ctx.strokeStyle = 'black'  // Color of the stroke
+      ctx.lineWidth = textBox.fontSize / 15  // Adjust this value to change stroke thickness
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
       const text = textBox.text.toUpperCase()
       
-      // Reduce letter spacing
-      const letterSpacing = textBox.fontSize * 0.02
+      // Use the provided letterSpacingFactor
+      const letterSpacing = textBox.fontSize * letterSpacingFactor
       const spacedText = text.split('').join(String.fromCharCode(8202).repeat(Math.round(letterSpacing)))
 
       // Add drop shadow
@@ -91,6 +94,9 @@ export function Page() {
       ctx.shadowBlur = 4
       ctx.shadowOffsetX = 2
       ctx.shadowOffsetY = 2
+
+      // Draw stroke
+      ctx.strokeText(spacedText, 0, 0)
 
       // Draw fill with drop shadow
       ctx.fillText(spacedText, 0, 0)
@@ -107,7 +113,7 @@ export function Page() {
     if (includeHandles) {
       renderEditingHandles(ctx, textBoxes, size)
     }
-  }, []) // Empty dependency array as it doesn't depend on any state or props
+  }, [])
 
   // Separate function for rendering handles
   const renderEditingHandles = (ctx: CanvasRenderingContext2D, textBoxes: TextBox[], size: number) => {
@@ -151,7 +157,7 @@ export function Page() {
         const img = new Image()
         img.crossOrigin = "anonymous"
         img.onload = () => {
-          renderMeme(ctx, img, textBoxes, true, 300)
+          renderMeme(ctx, img, textBoxes, true, 300, 0.01)
         }
         img.src = selectedTemplate.src
       }
@@ -265,8 +271,8 @@ export function Page() {
             fontSize: box.fontSize * scaleFactor
           }))
           
-          // Render the meme on the larger canvas
-          renderMeme(tempCtx, img, scaledTextBoxes, false, 800)
+          // Render the meme on the larger canvas with reduced letter spacing
+          renderMeme(tempCtx, img, scaledTextBoxes, false, 800, 0.0025)
           
           const dataUrl = tempCanvas.toDataURL('image/png')
           const link = document.createElement('a')
@@ -296,7 +302,7 @@ export function Page() {
         const img = new Image()
         img.crossOrigin = "anonymous"
         img.onload = () => {
-          renderMeme(ctx, img, textBoxes, true, 300) // Pass textBoxes array
+          renderMeme(ctx, img, textBoxes, true, 300, 0.01) // Pass textBoxes array
         }
         img.src = selectedTemplate.src
       }
