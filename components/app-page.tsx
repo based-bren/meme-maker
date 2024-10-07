@@ -79,7 +79,7 @@ export function Page() {
       ctx.font = `bold ${textBox.fontSize}px Impact`
       ctx.fillStyle = textBox.color
       ctx.strokeStyle = 'black'  // Color of the stroke
-      ctx.lineWidth = textBox.fontSize / 15  // Adjust this value to change stroke thickness
+      ctx.lineWidth = textBox.fontSize / 20  // Adjust this value to change stroke thickness
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
