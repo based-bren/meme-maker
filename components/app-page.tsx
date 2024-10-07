@@ -79,7 +79,10 @@ export function Page() {
       ctx.font = `bold ${textBox.fontSize}px Impact`
       ctx.fillStyle = textBox.color
       ctx.strokeStyle = 'black'  // Color of the stroke
-      ctx.lineWidth = textBox.fontSize / 20  // Adjust this value to change stroke thickness
+      ctx.lineWidth = textBox.fontSize / 35  // Slightly thinner stroke
+      ctx.lineJoin = 'round'  // Round line joins
+      ctx.lineCap = 'round'   // Round line caps
+      ctx.miterLimit = 2      // Limit miter joins
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
@@ -95,17 +98,24 @@ export function Page() {
       ctx.shadowOffsetX = 2
       ctx.shadowOffsetY = 2
 
-      // Draw stroke
-      ctx.strokeText(spacedText, 0, 0)
+      // Apply slight smoothing
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
 
-      // Draw fill with drop shadow
+      // Draw stroke (multiple times for smoother effect)
+      for (let i = 0; i < 3; i++) {
+        ctx.strokeText(spacedText, 0, 0)
+      }
+
+      // Draw fill
       ctx.fillText(spacedText, 0, 0)
 
-      // Reset shadow for future drawings
+      // Reset shadow and smoothing for future drawings
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
       ctx.shadowOffsetX = 0
       ctx.shadowOffsetY = 0
+      ctx.imageSmoothingEnabled = false
 
       ctx.restore()
     })
