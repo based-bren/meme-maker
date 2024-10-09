@@ -22,6 +22,26 @@ type TextBox = {
   rotation: number;
 }
 
+const SwitchButton = ({ checked, onChange, label }: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) => (
+  <label className="flex items-center cursor-pointer">
+    <div className="relative">
+      <input
+        type="checkbox"
+        className="sr-only"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <div className={`block w-10 h-6 rounded-full ${checked ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${checked ? 'transform translate-x-full' : ''}`}></div>
+    </div>
+    <span className="ml-3 text-white font-pixel text-xs green-text-glow">{label}</span>
+  </label>
+);
+
 export function Page() {
   const windowSize = useWindowSize()
   const [itemsPerPage, setItemsPerPage] = useState(6)
@@ -32,6 +52,7 @@ export function Page() {
   const [isRotating, setIsRotating] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [showHandles, setShowHandles] = useState(true);
 
   useEffect(() => {
     if (windowSize.width) {
@@ -312,16 +333,16 @@ export function Page() {
         const img = new Image()
         img.crossOrigin = "anonymous"
         img.onload = () => {
-          renderMeme(ctx, img, textBoxes, true, 300, 0.01) // Pass textBoxes array
+          renderMeme(ctx, img, textBoxes, showHandles, 300, 0.01) // Use showHandles here
         }
         img.src = selectedTemplate.src
       }
     }
-  }, [selectedTemplate, textBoxes, renderMeme]) // Add renderMeme to the dependency array
+  }, [selectedTemplate, textBoxes, renderMeme, showHandles]) // Add showHandles to the dependency array
 
   useEffect(() => {
     renderEditableMeme()
-  }, [selectedTemplate, textBoxes, renderEditableMeme]) // Add renderEditableMeme to the dependency array
+  }, [selectedTemplate, textBoxes, renderEditableMeme, showHandles]) // Add showHandles to the dependency array
 
   return (
     <div className="min-h-screen px-2 py-4 bg-retro-pattern text-white font-pixel flex flex-col">
@@ -352,8 +373,7 @@ export function Page() {
           color: white;
           padding: 10px 20px;
           text-align: center;
-          text-decoration: none;
-          display: inline-block;
+          text          display: inline-block;
           font-size: 12px;
           margin: 4px 2px;
           cursor: pointer;
@@ -383,6 +403,30 @@ export function Page() {
           background-color: rgba(0, 0, 0, 0.7);
           border-radius: 10px;
           padding: 10px;
+        }
+
+        .form-checkbox {
+          color: #0f0;
+          background-color: #000;
+          border-color: #fff;
+        }
+
+        .form-checkbox:checked {
+          background-color: #0f0;
+          border-color: #0f0;
+          background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+          box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+        }
+
+        .form-checkbox:checked:hover,
+        .form-checkbox:checked:focus {
+          background-color: #0f0;
+          border-color: #0f0;
+        }
+
+        .form-checkbox:focus {
+          box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+          border-color: #0f0;
         }
       `}</style>
 
@@ -428,6 +472,13 @@ export function Page() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="w-full mb-4">
+              <SwitchButton
+                checked={showHandles}
+                onChange={setShowHandles}
+                label="HANDLES"
+              />
             </div>
             <div className="mt-4 flex flex-col w-full">
               <button
