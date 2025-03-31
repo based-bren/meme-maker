@@ -596,7 +596,7 @@ export function Page() {
           </a>
         </div>
         <p className="text-center text-white text-xs mt-4 green-text-glow">
-          © 2024 based-bren. All rights reserved.
+          © 2025 based-bren. All rights reserved.
         </p>
       </footer>
     </div>
