@@ -4,7 +4,8 @@ import path from 'path';
 
 export async function GET() {
   const memeDir = path.join(process.cwd(), 'public', 'memes');
-  const memeFiles = fs.readdirSync(memeDir);
+  const memeFiles = fs.readdirSync(memeDir)
+    .filter(file => file.endsWith('.png') && !file.includes('Trans'));
 
   const memeTemplates = memeFiles.map((file, index) => ({
     id: index + 1,

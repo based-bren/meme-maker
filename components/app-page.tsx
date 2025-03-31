@@ -392,44 +392,33 @@ export function Page() {
           font-family: 'Press Start 2P', cursive;
         }
 
-        .green-glow {
-          box-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 0 15px #0f0, 0 0 20px #0f0, 0 0 35px #0f0;
-        }
-
-        .green-text-glow {
-          text-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 0 15px #0f0;
-        }
-
         .pixel-button {
-          background-color: #4CAF50;
+          background-color: #1a1a1a;
           border: none;
           color: white;
           padding: 10px 20px;
           text-align: center;
-          text          display: inline-block;
+          text-decoration: none;
+          display: inline-block;
           font-size: 12px;
           margin: 4px 2px;
           cursor: pointer;
           transition-duration: 0.4s;
-          box-shadow: inset -4px -4px 0px 0px #165b18;
+          box-shadow: inset -4px -4px 0px 0px #333;
         }
 
         .pixel-button:hover {
-          background-color: #45a049;
-          box-shadow: inset -6px -6px 0px 0px #165b18;
+          background-color: #333;
+          box-shadow: inset -6px -6px 0px 0px #333;
         }
 
         .pixel-button:active {
-          background-color: #3e8e41;
-          box-shadow: inset 4px 4px 0px 0px #165b18;
+          background-color: #444;
+          box-shadow: inset 4px 4px 0px 0px #333;
         }
 
         .bg-retro-pattern {
-          background-image: 
-            linear-gradient(to right, #333 1px, transparent 1px),
-            linear-gradient(to bottom, #333 1px, transparent 1px);
-          background-size: 16px 16px;
-          background-color: #808080;
+          background-color: #1e3a8a;
         }
 
         .container {
@@ -439,32 +428,30 @@ export function Page() {
         }
 
         .form-checkbox {
-          color: #0f0;
+          color: #fff;
           background-color: #000;
           border-color: #fff;
         }
 
         .form-checkbox:checked {
-          background-color: #0f0;
-          border-color: #0f0;
+          background-color: #fff;
+          border-color: #fff;
           background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
-          box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
         }
 
         .form-checkbox:checked:hover,
         .form-checkbox:checked:focus {
-          background-color: #0f0;
-          border-color: #0f0;
+          background-color: #fff;
+          border-color: #fff;
         }
 
         .form-checkbox:focus {
-          box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
-          border-color: #0f0;
+          border-color: #fff;
         }
       `}</style>
 
       <div className={`container mx-auto ${windowSize.width >= 768 ? 'max-w-6xl' : 'max-w-sm'}`}>
-        <h1 className="text-xl font-bold mb-4 text-center green-text-glow">Ham Meme Generator 6900</h1>
+        <h1 className="text-xl font-bold mb-4 text-center green-text-glow">TN100x Meme Generator</h1>
         {selectedTemplate ? (
           <div className="flex flex-col items-center">
             <canvas
@@ -478,7 +465,7 @@ export function Page() {
               onMouseUp={handleEnd}
               onMouseLeave={handleEnd}
               onTouchEnd={handleEnd}
-              className="border-4 border-white mb-4 cursor-move green-glow"
+              className="border-4 border-white mb-4 cursor-move"
             />
             <div className="w-full">
               {textBoxes.map((textBox) => (
@@ -553,7 +540,7 @@ export function Page() {
                     alt={template.alt}
                     width={windowSize.width >= 768 ? 600 : 300}
                     height={windowSize.width >= 768 ? 600 : 300}
-                    className="rounded-lg green-glow w-full h-auto"
+                    className="rounded-lg w-full h-auto"
                   />
                 </div>
               ))}
@@ -578,7 +565,7 @@ export function Page() {
           </div>
         )}
       </div>
-      
+
       <footer className="mt-auto pt-8 pb-4">
         <div className="flex justify-center space-x-6">
           <a href="https://twitter.com/BrenOfTheGlen" target="_blank" rel="noopener noreferrer" className="text-white hover:text-green-300 transition-colors">

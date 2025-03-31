@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ham Meme Generator",
-  description: "Memes by Bren",
+  title: "TN100x Meme Generator",
+  description: "Create memes with TN100x style",
 };
 
 export default function RootLayout({
