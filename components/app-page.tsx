@@ -12,6 +12,12 @@ type MemeTemplate = {
   alt: string;
 }
 
+type GifItem = {
+  id: number;
+  src: string;
+  alt: string;
+}
+
 type TextBox = {
   id: number;
   text: string;
@@ -44,9 +50,12 @@ const SwitchButton = ({ checked, onChange, label }: {
 
 export function Page() {
   const windowSize = useWindowSize()
+  const [viewMode, setViewMode] = useState<'memes' | 'gifs'>('memes')
   const [itemsPerPage, setItemsPerPage] = useState(6)
   const [memeTemplates, setMemeTemplates] = useState<MemeTemplate[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<MemeTemplate | null>(null)
+  const [gifItems, setGifItems] = useState<GifItem[]>([])
+  const [selectedGif, setSelectedGif] = useState<GifItem | null>(null)
   const [textBoxes, setTextBoxes] = useState<TextBox[]>([])
   const [draggedTextBox, setDraggedTextBox] = useState<number | null>(null)
   const [isRotating, setIsRotating] = useState(false)
@@ -65,6 +74,13 @@ export function Page() {
     fetch('/api/memes')
       .then(response => response.json())
       .then(data => setMemeTemplates(data))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/gifs')
+      .then(response => response.json())
+      .then(data => setGifItems(data))
+      .catch(() => setGifItems([]))
   }, [])
 
   const totalPages = Math.ceil(memeTemplates.length / itemsPerPage)
@@ -452,7 +468,23 @@ export function Page() {
 
       <div className={`container mx-auto ${windowSize.width >= 768 ? 'max-w-6xl' : 'max-w-sm'}`}>
         <h1 className="text-xl font-bold mb-4 text-center green-text-glow">TN100x Meme Generator</h1>
-        {selectedTemplate ? (
+
+        <div className="flex justify-center mb-4 space-x-2">
+          <button
+            onClick={() => setViewMode('memes')}
+            className={`pixel-button px-4 py-2 text-xs ${viewMode === 'memes' ? 'bg-green-600' : ''}`}
+          >
+            MEMES
+          </button>
+          <button
+            onClick={() => setViewMode('gifs')}
+            className={`pixel-button px-4 py-2 text-xs ${viewMode === 'gifs' ? 'bg-green-600' : ''}`}
+          >
+            GIFS
+          </button>
+        </div>
+
+        {viewMode === 'memes' && (selectedTemplate ? (
           <div className="flex flex-col items-center">
             <canvas
               ref={canvasRef}
@@ -561,6 +593,66 @@ export function Page() {
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+        ))}
+
+        {viewMode === 'gifs' && (
+          <div>
+            <h2 className="text-lg font-semibold mb-4 green-text-glow text-center">GIF gallery</h2>
+
+            {selectedGif && (
+              <div className="mb-6 flex flex-col items-center">
+                <div className="border-4 border-white mb-4 max-w-full">
+                  <img
+                    src={selectedGif.src}
+                    alt={selectedGif.alt}
+                    className="w-full h-auto"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    if (!selectedGif) return
+                    fetch(selectedGif.src)
+                      .then((response) => response.blob())
+                      .then((blob) => {
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.style.display = 'none'
+                        a.href = url
+                        a.download = selectedGif.alt.replace(/\s+/g, '-').toLowerCase() + '.gif'
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                      })
+                  }}
+                  className="pixel-button mb-2 flex items-center justify-center"
+                >
+                  <ArrowDown className="w-4 h-4 mr-2" />
+                  <span>Download GIF</span>
+                </button>
+              </div>
+            )}
+
+            <div className={`grid gap-2 ${windowSize.width >= 768 ? 'grid-cols-5' : 'grid-cols-2'}`}>
+              {gifItems.map((gif) => (
+                <div
+                  key={gif.id}
+                  className={`cursor-pointer hover:opacity-80 transition-opacity ${selectedGif?.id === gif.id ? 'ring-4 ring-green-400' : ''}`}
+                  onClick={() => setSelectedGif(gif)}
+                >
+                  <img
+                    src={gif.src}
+                    alt={gif.alt}
+                    className="rounded-lg w-full h-auto"
+                  />
+                </div>
+              ))}
+              {gifItems.length === 0 && (
+                <p className="col-span-full text-center text-sm text-gray-200">
+                  No GIFs found in <code>/public/gif</code>.
+                </p>
+              )}
             </div>
           </div>
         )}
